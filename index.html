@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>牛马到账计时器 · 在工位看着钱到账</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #dfeefd 0%, #f2f8ff 60%, #eaf3fc 100%);
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: #2e3d4d;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 28px 14px 60px;
+  }
+  body.overtime { background: linear-gradient(180deg, #fdeaea 0%, #fff3f0 60%, #ffe9e5 100%); }
+  header { text-align: center; margin-bottom: 18px; }
+  header h1 { font-size: 26px; letter-spacing: 3px; color: #2e3d4d; }
+  header h1 em { font-style: normal; color: #3a86d0; }
+  header p { font-size: 12.5px; color: #7e93a6; margin-top: 6px; letter-spacing: 1px; }
+  .card {
+    width: min(560px, 94vw);
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 16px 44px rgba(58, 110, 168, .14);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .main-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px 0; }
+  .badge { font-size: 12px; padding: 4px 12px; border-radius: 999px; color: #fff; background: #3a86d0; letter-spacing: 2px; }
+  .badge.fish { background: #4caf7d; }
+  .badge.over { background: #e05656; }
+  .badge.off { background: #8a97a5; }
+  .date { font-size: 12px; color: #8a97a5; }
+  .clock { font-size: 22px; color: #5e7080; font-variant-numeric: tabular-nums; text-align: right; padding: 6px 20px 0; }
+  .big-wrap { padding: 10px 20px 4px; }
+  .big-label { font-size: 13px; color: #7e93a6; letter-spacing: 2px; }
+  .big { font-size: clamp(40px, 9vw, 58px); font-weight: 800; color: #2e3d4d; font-variant-numeric: tabular-nums; letter-spacing: 1px; line-height: 1.15; }
+  .big .unit { font-size: 22px; font-weight: 600; color: #7e93a6; margin-right: 4px; }
+  .rate { font-size: 13px; color: #3a86d0; padding: 0 20px 14px; }
+  .rate b { font-variant-numeric: tabular-nums; }
+  .prog-wrap { padding: 0 20px 18px; }
+  .prog-line { display: flex; justify-content: space-between; font-size: 12px; color: #7e93a6; margin-bottom: 6px; }
+  .bar { height: 10px; background: #eaf1f8; border-radius: 999px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #3a86d0, #6cb0f0); transition: width .5s; }
+  body.overtime .bar i { background: linear-gradient(90deg, #e05656, #f08a7a); }
+  .month { display: flex; justify-content: space-between; padding: 12px 20px; border-top: 1px dashed #d3e0ec; font-size: 13px; color: #5e7080; }
+  .month b { color: #2e3d4d; font-variant-numeric: tabular-nums; }
+  /* 摸鱼回收器 */
+  .sec-title { font-size: 14px; font-weight: 700; letter-spacing: 2px; padding: 14px 20px 4px; color: #2e3d4d; }
+  .fish-btns { display: flex; gap: 8px; padding: 8px 20px 4px; flex-wrap: wrap; }
+  .fish-btns button {
+    flex: 1; min-width: 100px; padding: 10px 6px; font-size: 13px; cursor: pointer;
+    border: 1.5px solid #bcd6ee; background: #f4faff; color: #3a6ea8; border-radius: 12px;
+  }
+  .fish-btns button.on { background: #4caf7d; border-color: #4caf7d; color: #fff; }
+  .fish-list { padding: 8px 20px 16px; font-size: 12.5px; color: #5e7080; line-height: 2; }
+  .fish-list b { color: #4caf7d; font-variant-numeric: tabular-nums; }
+  /* 语录 */
+  .quote { padding: 4px 20px 16px; font-size: 12.5px; color: #9aa8b6; font-style: italic; }
+  /* 工具行 */
+  .tools { width: min(560px, 94vw); display: flex; gap: 10px; flex-wrap: wrap; }
+  .tools button {
+    flex: 1; min-width: 120px; padding: 12px; font-size: 13.5px; cursor: pointer;
+    border: 0; border-radius: 14px; background: #fff; color: #3a6ea8;
+    box-shadow: 0 6px 18px rgba(58,110,168,.12); letter-spacing: 1px;
+  }
+  .tools button.gold { color: #b07a1e; background: #fff8e8; }
+  .tools button:hover { transform: translateY(-1px); }
+  /* 设置弹层 */
+  .mask { position: fixed; inset: 0; background: rgba(20,30,44,.45); display: none; align-items: center; justify-content: center; z-index: 20; }
+  .mask.open { display: flex; }
+  .set-card { width: min(420px, 92vw); background: #fff; border-radius: 16px; padding: 24px; }
+  .set-card h3 { font-size: 17px; letter-spacing: 2px; margin-bottom: 14px; }
+  .set-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 13.5px; }
+  .set-row label { flex: 0 0 110px; color: #5e7080; }
+  .set-row input { flex: 1; padding: 9px 12px; border: 1.5px solid #d3e0ec; border-radius: 10px; font-size: 14px; color: #2e3d4d; }
+  .set-btn { width: 100%; padding: 12px; margin-top: 8px; border: 0; border-radius: 12px; background: #3a86d0; color: #fff; font-size: 15px; cursor: pointer; letter-spacing: 4px; }
+  /* 老板屏 */
+  #bossScreen { position: fixed; inset: 0; background: #f4f7fa; z-index: 50; display: none; flex-direction: column; align-items: center; justify-content: center; }
+  #bossScreen.open { display: flex; }
+  .boss-big { font-size: clamp(48px, 10vw, 90px); font-weight: 800; color: #2e6b3d; letter-spacing: 4px; }
+  .boss-line { font-size: 16px; color: #5e7080; margin-top: 14px; letter-spacing: 2px; }
+  .boss-tip { position: fixed; bottom: 18px; font-size: 11px; color: #b0bcc8; letter-spacing: 2px; }
+  /* 越狱 */
+  #jailbreak { position: fixed; inset: 0; background: rgba(15,25,40,.88); z-index: 60; display: none; align-items: center; justify-content: center; flex-direction: column; }
+  #jailbreak.open { display: flex; }
+  .jb-door { font-size: 72px; animation: jbswing .9s ease; transform-origin: left bottom; }
+  @keyframes jbswing { from { transform: perspective(600px) rotateY(0); } to { transform: perspective(600px) rotateY(78deg); } }
+  .jb-t { font-size: clamp(30px, 6vw, 52px); color: #ffd98a; font-weight: 800; letter-spacing: 8px; margin-top: 10px; }
+  .jb-s { font-size: 14px; color: rgba(255,244,224,.8); margin-top: 12px; letter-spacing: 3px; }
+  @media (max-width: 480px) { header h1 { font-size: 20px; } .clock { font-size: 18px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>牛马<em>到账计时器</em></h1>
+  <p>每一秒上班，都在为下班充值 · 数据仅存本地不上传</p>
+</header>
+
+<div class="card">
+  <div class="main-head">
+    <span class="badge" id="stateBadge">上班中</span>
+    <span class="date" id="dateTxt"></span>
+  </div>
+  <div class="clock" id="clockTxt">--:--:--</div>
+  <div class="big-wrap">
+    <div class="big-label">今日已赚</div>
+    <div class="big"><span class="unit">¥</span><span id="earned">0.0000</span></div>
+  </div>
+  <div class="rate">到账速率 <b id="rate">0.0000</b> 元/秒 <span id="friTag" style="display:none;color:#b07a1e;font-weight:700">· 周五快乐溢价 ×1.5</span></div>
+  <div class="prog-wrap">
+    <div class="prog-line"><span id="leftLabel">距离下班</span><b id="leftTime">--:--:--</b></div>
+    <div class="bar"><i id="progBar"></i></div>
+    <div class="prog-line" style="margin-top:5px"><span>工作进度</span><span id="progPct">0%</span></div>
+  </div>
+  <div class="month"><span>本月累计（按计薪日折算）</span><b id="monthEarned">¥0.00</b></div>
+</div>
+
+<div class="card">
+  <div class="sec-title">摸鱼回收器 · 白嫖才是真到账</div>
+  <div class="fish-btns">
+    <button type="button" data-k="lache">带薪拉屎</button>
+    <button type="button" data-k="heshui">带薪喝水</button>
+    <button type="button" data-k="fadai">带薪发呆</button>
+  </div>
+  <div class="fish-list" id="fishList">今天还没开始回收，点上面按钮开始计时</div>
+  <div class="quote" id="quoteTxt"></div>
+</div>
+
+<div class="tools">
+  <button type="button" id="setBtn">⚙ 薪资设置</button>
+  <button type="button" id="bossBtn" class="gold">😎 老板来了</button>
+  <button type="button" id="shareBtn">📸 生成战绩图</button>
+</div>
+
+<div class="mask" id="setMask">
+  <div class="set-card">
+    <h3>薪资设置（仅存本地）</h3>
+    <div class="set-row"><label>税后月薪 ¥</label><input id="inSalary" type="number" placeholder="如 12000"></div>
+    <div class="set-row"><label>每月计薪天数</label><input id="inDays" type="number" step="0.5" placeholder="21.75"></div>
+    <div class="set-row"><label>上班时间</label><input id="inStart" type="time"></div>
+    <div class="set-row"><label>下班时间</label><input id="inEnd" type="time"></div>
+    <button class="set-btn" id="saveBtn" type="button">开始到账</button>
+  </div>
+</div>
+
+<div id="bossScreen">
+  <div class="boss-big">100%</div>
+  <div class="boss-line">今日工作热爱度 · 饱和度 · 敬业度 全满格</div>
+  <div class="boss-tip">老板走后点任意位置退出</div>
+</div>
+
+<div id="jailbreak">
+  <div class="jb-door">🚪</div>
+  <div class="jb-t">越狱成功</div>
+  <div class="jb-s">今日充值完毕 · 明天继续当牛马</div>
+</div>
+
+<script>
+(function () {
+  /* ===== 配置与状态 ===== */
+  var KEY_CFG = "niuma_cfg", KEY_FISH = "niuma_fish";
+  var cfg = null, fish = null, lastDay = null, jailDone = false, jailTimer = null;
+  var QUOTES = [
+    "上班是为了下班，下班是为了明天上班。",
+    "工资到账 3 秒消失术，但到账过程很治愈。",
+    "我不是在工作，我是在给自己的下班充值。",
+    "牛马的浪漫，就是看着数字一秒一秒变多。",
+    "摸鱼不是偷懒，是工资的分期退款。",
+    "距离退休还有 XXXX 天，但今天先摸为敬。",
+    "老板画的饼越大，我的到账数字越香。",
+    "只要我摸鱼够快，焦虑就追不上我。"
+  ];
+  var FISH_NAMES = { lache: "带薪拉屎", heshui: "带薪喝水", fadai: "带薪发呆" };
+
+  function $(id) { return document.getElementById(id); }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function load(k, def) { try { return JSON.parse(localStorage.getItem(k)) || def; } catch (e) { return def; } }
+  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  cfg = load(KEY_CFG, null);
+  fish = load(KEY_FISH, {});
+  function todayKey() { var d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+  if (!fish || fish.day !== todayKey()) { fish = { day: todayKey(), items: {}, totalSec: 0 }; save(KEY_FISH, fish); }
+
+  /* ===== 时间解析 ===== */
+  function hm(hms) { var p = (hms || "09:00").split(":"); return { h: +p[0], m: +p[1] || 0 }; }
+  function minsOf(d) { return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60; }
+  function startMin() { var t = hm(cfg.start); return t.h * 60 + t.m; }
+  function endMin() { var t = hm(cfg.end); return t.h * 60 + t.m; }
+  function perSec() { return cfg.salary / (cfg.days * 8 * 3600); }
+
+  /* ===== 主循环 ===== */
+  function tick() {
+    if (!cfg) return;
+    var now = new Date();
+    var nowMin = minsOf(now);
+    var s = startMin(), e = endMin();
+    var isFri = now.getDay() === 5;
+    var mult = isFri ? 1.5 : 1;
+    var secRate = perSec() * mult;
+    var worked = 0, earned = 0, over = false, before = false;
+
+    if (nowMin < s) { before = true; }
+    else if (nowMin <= e) { worked = nowMin - s; earned = worked * 60 * secRate; }
+    else { over = true; worked = e - s; earned = worked * 60 * secRate; }
+
+    /* 摸鱼：白嫖 = 摸鱼秒数 × 速率（摸鱼也在计薪） */
+    var fishEarn = fish.totalSec * perSec();
+
+    /* 状态 */
+    var badge = $("stateBadge");
+    if (before) { badge.textContent = "还没上班"; badge.className = "badge off"; }
+    else if (over) {
+      var overMin = nowMin - e;
+      badge.textContent = "加班中 · 老板欠你 ¥" + (overMin * 60 * secRate * 1.5).toFixed(2);
+      badge.className = "badge over";
+      document.body.classList.add("overtime");
+    } else if (fishOn()) { badge.textContent = "摸鱼中"; badge.className = "badge fish"; document.body.classList.remove("overtime"); }
+    else { badge.textContent = "上班中"; badge.className = "badge"; document.body.classList.remove("overtime"); }
+
+    /* 数字 */
+    $("dateTxt").textContent = now.getFullYear() + "." + pad(now.getMonth() + 1) + "." + pad(now.getDate()) + " 周" + "日一二三四五六"[now.getDay()];
+    $("clockTxt").textContent = pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds());
+    $("earned").textContent = (earned + fishEarn).toFixed(4);
+    $("rate").textContent = secRate.toFixed(4);
+    $("friTag").style.display = isFri ? "inline" : "none";
+    $("leftLabel").textContent = over ? "今日已下班" : "距离下班";
+    if (before) { $("leftTime").textContent = "还没上班"; $("progBar").style.width = "0%"; $("progPct").textContent = "0%"; }
+    else if (over) { $("leftTime").textContent = "自由了（或加班中）"; $("progBar").style.width = "100%"; $("progPct").textContent = "100%"; }
+    else {
+      var remain = e - nowMin;
+      var rh = Math.floor(remain / 60), rm = Math.floor(remain % 60), rs = Math.floor((remain % 1) * 60);
+      $("leftTime").textContent = pad(rh) + ":" + pad(rm) + ":" + pad(rs);
+      var pct = Math.min(100, worked / (e - s) * 100);
+      $("progBar").style.width = pct.toFixed(1) + "%";
+      $("progPct").textContent = pct.toFixed(1) + "%";
+    }
+    /* 本月累计 = 日均 × 本月已过计薪日（周一~五数） */
+    var d = new Date();
+    var workdays = 0;
+    for (var i = 1; i <= now.getDate() - 1; i++) {
+      var dw = new Date(d.getFullYear(), d.getMonth(), i).getDay();
+      if (dw >= 1 && dw <= 5) workdays++;
+    }
+    var dayEarn = (e - s) * 60 * perSec() + fish.totalSec * perSec() * 0;
+    $("monthEarned").textContent = "¥" + (workdays * dayEarn + (over || worked > 0 ? earned : 0)).toFixed(2);
+
+    /* 语录每小时换 */
+    if (lastDay !== todayKey()) {
+      lastDay = todayKey(); jailDone = false;
+      fish = { day: todayKey(), items: {}, totalSec: 0 }; save(KEY_FISH, fish);
+      renderFish();
+      jailTimer = null;
+    }
+    $("quoteTxt").textContent = "「" + QUOTES[now.getHours() % QUOTES.length] + "」";
+
+    /* 越狱 */
+    if (!jailDone && over && !jailTimer) {
+      jailDone = true;
+      var jb = $("jailbreak");
+      jb.classList.add("open");
+      sndJail();
+      jailTimer = setTimeout(function () { jb.classList.remove("open"); }, 4200);
+    }
+  }
+
+  /* ===== 摸鱼 ===== */
+  function fishOn() { for (var k in fish.items) { if (fish.items[k].on) return true; } return false; }
+  function renderFish() {
+    var html = [], total = 0;
+    for (var k in FISH_NAMES) {
+      var it = fish.items[k];
+      if (!it) continue;
+      var sec = it.sec + (it.on ? (Date.now() - it.t0) / 1000 : 0);
+      total += sec;
+      html.push(FISH_NAMES[k] + " " + Math.floor(sec / 60) + "分" + Math.floor(sec % 60) + "秒 → 白嫖 <b>¥" + (sec * perSec()).toFixed(2) + "</b>" + (it.on ? " <span style='color:#4caf7d'>● 计时中</span>" : ""));
+    }
+    fish.totalSec = total;
+    $("fishList").innerHTML = html.length ? html.join("<br>") + "<br>合计白嫖 <b style='font-size:14px'>¥" + (total * perSec()).toFixed(2) + "</b>" : "今天还没开始回收，点上面按钮开始计时";
+    save(KEY_FISH, fish);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll(".fish-btns button"), function (btn) {
+    btn.addEventListener("click", function () {
+      if (!cfg) { openSet(); return; }
+      var k = btn.getAttribute("data-k");
+      var it = fish.items[k] || { sec: 0, on: false, t0: 0 };
+      if (it.on) { it.sec += (Date.now() - it.t0) / 1000; it.on = false; btn.classList.remove("on"); }
+      else { it.on = true; it.t0 = Date.now(); btn.classList.add("on"); }
+      fish.items[k] = it;
+      renderFish();
+    });
+  });
+
+  /* ===== 设置 ===== */
+  function openSet() {
+    $("inSalary").value = cfg ? cfg.salary : "";
+    $("inDays").value = cfg ? cfg.days : 21.75;
+    $("inStart").value = cfg ? cfg.start : "09:00";
+    $("inEnd").value = cfg ? cfg.end : "18:00";
+    $("setMask").classList.add("open");
+  }
+  $("setBtn").addEventListener("click", openSet);
+  $("saveBtn").addEventListener("click", function () {
+    var salary = parseFloat($("inSalary").value);
+    if (!salary || salary <= 0) { $("inSalary").style.borderColor = "#e05656"; return; }
+    cfg = {
+      salary: salary,
+      days: parseFloat($("inDays").value) || 21.75,
+      start: $("inStart").value || "09:00",
+      end: $("inEnd").value || "18:00"
+    };
+    save(KEY_CFG, cfg);
+    $("setMask").classList.remove("open");
+    tick();
+  });
+
+  /* ===== 老板屏 ===== */
+  $("bossBtn").addEventListener("click", function () { $("bossScreen").classList.add("open"); });
+  $("bossScreen").addEventListener("click", function () { this.classList.remove("open"); });
+
+  /* ===== 越狱音效 ===== */
+  function sndJail() {
+    try {
+      var c = new (window.AudioContext || window.webkitAudioContext)();
+      [[523, 0], [659, .12], [784, .24], [1047, .38]].forEach(function (p) {
+        var o = c.createOscillator(), g = c.createGain();
+        o.type = "triangle"; o.frequency.value = p[0];
+        g.gain.setValueAtTime(.12, c.currentTime + p[1]);
+        g.gain.exponentialRampToValueAtTime(.001, c.currentTime + p[1] + .3);
+        o.connect(g); g.connect(c.destination);
+        o.start(c.currentTime + p[1]); o.stop(c.currentTime + p[1] + .32);
+      });
+    } catch (e) {}
+  }
+
+  /* ===== 战绩图 ===== */
+  $("shareBtn").addEventListener("click", function () {
+    if (!cfg) { openSet(); return; }
+    var now = new Date();
+    var cv = document.createElement("canvas");
+    cv.width = 800; cv.height = 1000;
+    var x = cv.getContext("2d");
+    var g = x.createLinearGradient(0, 0, 0, 1000);
+    g.addColorStop(0, "#dfeefd"); g.addColorStop(1, "#eaf3fc");
+    x.fillStyle = g; x.fillRect(0, 0, 800, 1000);
+    x.fillStyle = "#ffffff"; x.beginPath();
+    if (x.roundRect) x.roundRect(40, 60, 720, 760, 24); else x.rect(40, 60, 720, 760);
+    x.fill();
+    x.fillStyle = "#3a86d0"; x.font = "800 40px sans-serif"; x.textAlign = "center";
+    x.fillText("牛马到账计时器", 400, 140);
+    x.fillStyle = "#8a97a5"; x.font = "24px sans-serif";
+    x.fillText($("dateTxt").textContent, 400, 185);
+    x.fillStyle = "#7e93a6"; x.font = "26px sans-serif";
+    x.fillText("今日已赚", 400, 265);
+    x.fillStyle = "#2e3d4d"; x.font = "800 72px sans-serif";
+    x.fillText("¥" + $("earned").textContent, 400, 350);
+    x.fillStyle = "#3a86d0"; x.font = "26px sans-serif";
+    x.fillText("速率 ¥" + $("rate").textContent + " /秒", 400, 405);
+    var fishHtml = $("fishList").textContent || "";
+    var lines = [];
+    for (var k in FISH_NAMES) {
+      var it = fish.items[k];
+      if (it && (it.sec > 0 || it.on)) {
+        var sec = it.sec + (it.on ? (Date.now() - it.t0) / 1000 : 0);
+        lines.push(FISH_NAMES[k] + " " + Math.floor(sec / 60) + " 分钟");
+      }
+    }
+    x.fillStyle = "#5e7080"; x.font = "24px sans-serif";
+    x.fillText("摸鱼白嫖 ¥" + (fish.totalSec * perSec()).toFixed(2), 400, 470);
+    x.font = "20px sans-serif"; x.fillStyle = "#9aa8b6";
+    lines.slice(0, 3).forEach(function (l, i) { x.fillText(l, 400, 515 + i * 34); });
+    x.fillStyle = "#2e3d4d"; x.font = "30px sans-serif";
+    x.fillText("本月累计 " + $("monthEarned").textContent, 400, 680);
+    x.fillStyle = "#9aa8b6"; x.font = "22px sans-serif";
+    x.fillText("「" + QUOTES[now.getHours() % QUOTES.length] + "」", 400, 740);
+    x.fillStyle = "#5e7080"; x.font = "600 28px sans-serif";
+    x.fillText("牛马宇宙 · 时薪换算器 & 到账计时器", 400, 900);
+    x.fillStyle = "#9aa8b6"; x.font = "18px sans-serif";
+    x.fillText("数据纯本地计算 · 打工人自己的账本", 400, 945);
+    var a = document.createElement("a");
+    a.download = "牛马战绩-" + todayKey() + ".png";
+    a.href = cv.toDataURL("image/png");
+    a.click();
+  });
+
+  renderFish();
+  if (!cfg) openSet();
+  setInterval(tick, 200);
+  tick();
+})();
+</script>
+</body>
+</html>
