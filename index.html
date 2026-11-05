@@ -91,7 +91,29 @@
   .jb-t { font-size: clamp(30px, 6vw, 52px); color: #ffd98a; font-weight: 800; letter-spacing: 8px; margin-top: 10px; }
   .jb-s { font-size: 14px; color: rgba(255,244,224,.8); margin-top: 12px; letter-spacing: 3px; }
   @media (max-width: 480px) { header h1 { font-size: 20px; } .clock { font-size: 18px; } }
+
+/* 搬砖工地 */
+#brickCard { width: min(560px, 94vw); background: #ffffff; border-radius: 18px; overflow: hidden; box-shadow: 0 16px 44px rgba(58,110,168,.14); margin-bottom: 16px; }
+#brickWrap { position: relative; }
+#brickCv { display: block; width: 100%; }
+.brick-prog { padding: 10px 18px 4px; }
+.brick-prog .pl { display: flex; justify-content: space-between; font-size: 12px; color: #7e93a6; margin-bottom: 5px; }
+.brick-prog .pl b { color: #2e3d4d; }
+.brick-bar { height: 12px; background: #eaf1f8; border-radius: 999px; overflow: hidden; }
+.brick-bar i { display: block; height: 100%; width: 0; border-radius: 999px; background: repeating-linear-gradient(45deg, #e8a13c 0 10px, #f4b860 10px 20px); transition: width .6s; }
+.goods-chips { display: flex; gap: 8px; padding: 12px 18px 16px; flex-wrap: wrap; }
+.goods-chip { flex: 1; min-width: 84px; text-align: center; padding: 9px 4px; border-radius: 12px; background: #f0f4f9; border: 1.5px solid #dbe6ef; cursor: default; }
+.goods-chip .g-name { font-size: 12px; color: #5e7080; }
+.goods-chip .g-price { font-size: 11px; color: #9aa8b6; margin-top: 2px; }
+.goods-chip .g-bar { height: 5px; background: #dfe8f0; border-radius: 99px; margin-top: 6px; overflow: hidden; }
+.goods-chip .g-bar i { display: block; height: 100%; width: 0; background: #8a97a5; border-radius: 99px; transition: width .8s; }
+.goods-chip.done { background: #fff8e2; border-color: #f2c46a; }
+.goods-chip.done .g-name { color: #b07a1e; font-weight: 700; }
+.goods-chip.done .g-bar i { background: linear-gradient(90deg, #f2c46a, #e8a13c); }
+#gToast { position: fixed; top: 76px; left: 50%; transform: translateX(-50%) translateY(-20px); background: #fff8e2; border: 1.5px solid #f2c46a; color: #8a5a12; font-size: 14px; font-weight: 700; padding: 12px 22px; border-radius: 999px; z-index: 30; opacity: 0; transition: all .5s ease; box-shadow: 0 10px 30px rgba(232,161,60,.3); letter-spacing: 1px; }
+#gToast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
+
 </head>
 <body>
 <header>
@@ -118,6 +140,14 @@
   <div class="month"><span>本月累计（按计薪日折算）</span><b id="monthEarned">¥0.00</b></div>
 </div>
 
+<div id="brickCard">
+  <div id="brickWrap"><canvas id="brickCv"></canvas></div>
+  <div class="brick-prog">
+    <div class="pl"><span>🔨 今日搬砖进度</span><b id="brickStat">已搬 0 分 · 砌了 0 块砖</b></div>
+    <div class="brick-bar"><i id="brickBar"></i></div>
+  </div>
+  <div class="goods-chips" id="goodsChips"></div>
+</div>
 <div class="card">
   <div class="sec-title">摸鱼回收器 · 白嫖才是真到账</div>
   <div class="fish-btns">
@@ -135,6 +165,7 @@
   <button type="button" id="shareBtn">📸 生成战绩图</button>
 </div>
 
+<div id="gToast"></div>
 <div class="mask" id="setMask">
   <div class="set-card">
     <h3>薪资设置（仅存本地）</h3>
@@ -385,6 +416,197 @@
     a.href = cv.toDataURL("image/png");
     a.click();
   });
+
+  /* ===== 搬砖工地动画 + 价值兑换 ===== */
+  var GOODS = [
+    { name: '大水', price: 2 },
+    { name: '瑞幸', price: 9.9 },
+    { name: '沙县狂欢', price: 18 },
+    { name: '电影票', price: 45 },
+    { name: '游戏机', price: 2000 },
+    { name: 'iPhone duo', price: 9999 }
+  ];
+  var goodsUnlocked = load('niuma_goods_toast', {});
+  var chipsEl = document.getElementById('goodsChips');
+  var goodsEls = {};
+  GOODS.forEach(function (g) {
+    var d = document.createElement('div');
+    d.className = 'goods-chip';
+    d.innerHTML = '<div class="g-name">' + g.name + '</div><div class="g-price">¥' + g.price + '</div><div class="g-bar"><i></i></div>';
+    chipsEl.appendChild(d);
+    goodsEls[g.name] = d;
+  });
+  function toastGoods(name, price) {
+    var gt = document.getElementById('gToast');
+    if (!gt) {
+      gt = document.createElement('div');
+      gt.id = 'gToast';
+      document.body.appendChild(gt);
+    }
+    gt.textContent = '🔨 已搬出一' + (name === '瑞幸' ? '杯' : name === '大水' ? '瓶' : '份') + name + '的钱！¥' + price + ' 达成';
+    gt.classList.add('show');
+    setTimeout(function () { gt.classList.remove('show'); }, 3500);
+  }
+  function updateGoods(earned) {
+    GOODS.forEach(function (g) {
+      var el = goodsEls[g.name];
+      if (!el) return;
+      var pct = Math.min(100, earned / g.price * 100);
+      el.querySelector('.g-bar i').style.width = pct.toFixed(1) + '%';
+      if (earned >= g.price) {
+        if (!el.classList.contains('done')) {
+          el.classList.add('done');
+          el.querySelector('.g-name').textContent = '✓ ' + g.name;
+          if (!goodsUnlocked[g.name] && earned < g.price * 1.5) {
+            goodsUnlocked[g.name] = todayKey();
+            save('niuma_goods_toast', goodsUnlocked);
+            toastGoods(g.name, g.price);
+          }
+        }
+      } else {
+        el.classList.remove('done');
+        el.querySelector('.g-name').textContent = g.name;
+      }
+    });
+  }
+
+  var brickCv = document.getElementById('brickCv');
+  var bctx = brickCv.getContext('2d');
+  var brickBarEl = document.getElementById('brickBar');
+  var brickStatEl = document.getElementById('brickStat');
+  var bub = []; /* 到账气泡 */
+  var lastBub = 0;
+
+  function drawBrickScene(earned, pct, workMin) {
+    var W = brickCv.clientWidth || 560, H = 190;
+    if (brickCv.width !== Math.round(W * (window.devicePixelRatio || 1))) {
+      brickCv.width = Math.round(W * (window.devicePixelRatio || 1));
+      brickCv.height = Math.round(H * (window.devicePixelRatio || 1));
+      brickCv.style.height = H + 'px';
+    }
+    var dpr = brickCv.width / W;
+    var x = bctx;
+    x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    x.clearRect(0, 0, W, H);
+    /* 天空渐变 */
+    var sky = x.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, '#dfeefd'); sky.addColorStop(1, '#f2f8ff');
+    x.fillStyle = sky; x.fillRect(0, 0, W, H);
+    var ground = H - 22;
+    /* 背景塔吊 */
+    x.strokeStyle = '#b8cbdc'; x.lineWidth = 3;
+    x.beginPath(); x.moveTo(W * 0.08, ground); x.lineTo(W * 0.08, H * 0.12); x.lineTo(W * 0.2, H * 0.12); x.stroke();
+    x.lineWidth = 1.5;
+    x.beginPath(); x.moveTo(W * 0.14, H * 0.12); x.lineTo(W * 0.14, H * 0.3); x.stroke();
+    x.strokeStyle = '#c8d9e8';
+    x.beginPath(); x.moveTo(W * 0.14, H * 0.3); x.lineTo(W * 0.11, H * 0.34); x.moveTo(W * 0.14, H * 0.3); x.lineTo(W * 0.17, H * 0.34); x.stroke();
+    /* 脚手架 */
+    x.strokeStyle = '#c8d9e8'; x.lineWidth = 2;
+    x.beginPath(); x.moveTo(W * 0.3, ground); x.lineTo(W * 0.3, H * 0.28); x.lineTo(W * 0.38, H * 0.28); x.lineTo(W * 0.38, ground); x.stroke();
+    x.beginPath(); x.moveTo(W * 0.3, H * 0.45); x.lineTo(W * 0.38, H * 0.45); x.moveTo(W * 0.3, H * 0.62); x.lineTo(W * 0.38, H * 0.62); x.stroke();
+    /* 地面 */
+    x.fillStyle = '#c7d5e2'; x.fillRect(0, ground, W, H - ground);
+    x.fillStyle = '#b3c3d2'; x.fillRect(0, ground, W, 3);
+    /* 砖墙：进度% → 砌好的砖 */
+    var wallX = W - 150, bw = 30, bh = 15, perRow = 4;
+    var doneBricks = Math.floor(pct / 100 * 100); /* 共100块=100% */
+    var wallTopY = ground - 15;
+    var placed = 0;
+    for (var row = 0; row < 25 && placed < doneBricks; row++) {
+      for (var col = 0; col < perRow && placed < doneBricks; col++) {
+        var bx = wallX + col * bw + (row % 2 ? bw / 2 : 0);
+        var by = ground - 15 - row * bh;
+        x.fillStyle = row % 2 ? '#e0a96d' : '#d69a5e';
+        x.fillRect(bx, by, bw - 2, bh - 2);
+        x.strokeStyle = 'rgba(140,95,50,.35)'; x.lineWidth = 1;
+        x.strokeRect(bx, by, bw - 2, bh - 2);
+        placed++;
+      }
+    }
+    /* 墙上小旗 */
+    if (doneBricks > 0) {
+      var flagX = wallX + Math.min(doneBricks, 100) % 2 * 0 + bw * perRow / 2;
+      var topRow = Math.floor(doneBricks / perRow);
+      var fy = ground - 15 - topRow * bh;
+      x.strokeStyle = '#5e7080'; x.lineWidth = 2;
+      x.beginPath(); x.moveTo(flagX, fy); x.lineTo(flagX, fy - 14); x.stroke();
+      x.fillStyle = '#e05656'; x.beginPath(); x.moveTo(flagX, fy - 14); x.lineTo(flagX + 10, fy - 11); x.lineTo(flagX, fy - 8); x.closePath(); x.fill();
+    }
+    /* 小人：从砖堆到墙往返 */
+    var now = performance.now();
+    var cycle = 6000; /* 一个来回6秒 */
+    var ph = (now % cycle) / cycle;
+    var legL = Math.sin(now / 130) * 3;
+    var manX = W * 0.12 + (W * 0.62 - W * 0.12) * (ph < 0.5 ? ph * 2 : (1 - ph) * 2);
+    var manY = ground;
+    var dir = ph < 0.5 ? 1 : -1;
+    /* 影子 */
+    x.fillStyle = 'rgba(40,50,65,.15)';
+    x.beginPath(); x.ellipse(manX, manY + 2, 13, 3, 0, 0, 6.29); x.fill();
+    /* 腿 */
+    x.strokeStyle = '#4a5568'; x.lineWidth = 2.6; x.lineCap = 'round';
+    x.beginPath(); x.moveTo(manX - 2, manY - 12); x.lineTo(manX - 2 + legL * dir, manY); x.stroke();
+    x.beginPath(); x.moveTo(manX + 2, manY - 12); x.lineTo(manX + 2 - legL * dir, manY); x.stroke();
+    /* 身体（工装蓝） */
+    x.fillStyle = '#4a7bb5';
+    x.beginPath();
+    if (x.roundRect) x.roundRect(manX - 7, manY - 26, 14, 15, 4); else x.rect(manX - 7, manY - 26, 14, 15);
+    x.fill();
+    /* 扛的砖（肩上） */
+    x.fillStyle = '#d69a5e';
+    x.fillRect(manX - 4 + dir * 3, manY - 33, 14, 8);
+    x.strokeStyle = 'rgba(140,95,50,.4)'; x.lineWidth = 1;
+    x.strokeRect(manX - 4 + dir * 3, manY - 33, 14, 8);
+    /* 手臂 */
+    x.strokeStyle = '#4a7bb5'; x.lineWidth = 2.2;
+    x.beginPath(); x.moveTo(manX + dir * 5, manY - 22); x.lineTo(manX + dir * 8, manY - 30); x.stroke();
+    /* 头（肤色）+ 安全帽 */
+    x.fillStyle = '#ffd9b3';
+    x.beginPath(); x.arc(manX + dir * 1, manY - 32, 5.2, 0, 6.29); x.fill();
+    x.fillStyle = '#f2b93c';
+    x.beginPath(); x.arc(manX + dir * 1, manY - 33.5, 5.6, 3.14, 0); x.fill();
+    x.fillRect(manX + dir * 1 - 6.4, manY - 34.6, 12.8, 2);
+    /* 眼睛 */
+    x.fillStyle = '#2b2b2b';
+    x.beginPath(); x.arc(manX + dir * 2.6, manY - 31.5, .7, 0, 6.29); x.fill();
+    /* 汗滴（搬砖辛苦） */
+    x.fillStyle = 'rgba(90,150,210,.8)';
+    var sw = (now / 900) % 1;
+    x.globalAlpha = 1 - sw;
+    x.beginPath(); x.ellipse(manX - dir * 6, manY - 36 - sw * 6, 1.1, 1.6, 0, 0, 6.29); x.fill();
+    x.globalAlpha = 1;
+    /* 到账气泡：每3秒冒一个 */
+    if (now - lastBub > 3000) {
+      lastBub = now;
+      bub.push({ x: manX + dir * 10, y: manY - 40, v: 0.5, txt: '+¥' + (perSec() * 3).toFixed(3) });
+    }
+    for (var bi = bub.length - 1; bi >= 0; bi--) {
+      var b = bub[bi];
+      b.y -= b.v; b.v *= 0.99;
+      x.globalAlpha = Math.max(0, Math.min(1, b.y / (manY - 90) - 0.1));
+      x.fillStyle = '#3a86d0'; x.font = '700 11px sans-serif'; x.textAlign = 'center';
+      x.fillText(b.txt, b.x, b.y);
+      x.globalAlpha = 1;
+      if (b.y < manY - 95) bub.splice(bi, 1);
+    }
+    x.textAlign = 'left';
+  }
+
+  var brickTick = setInterval(function () {
+    if (!cfg) return;
+    var now = new Date();
+    var nowMin = minsOf(now);
+    var s = startMin(), e = endMin();
+    var pct = 0, workMin = 0;
+    if (nowMin >= s && nowMin <= e) { workMin = nowMin - s; pct = workMin / (e - s) * 100; }
+    else if (nowMin > e) { pct = 100; workMin = e - s; }
+    var earnedToday = workMin * 60 * perSec();
+    drawBrickScene(earnedToday, pct, workMin);
+    brickBarEl.style.width = Math.min(100, pct).toFixed(1) + '%';
+    var doneBricks = Math.floor(pct);
+    brickStatEl.textContent = '已搬 ' + Math.floor(workMin / 60) + ' 小时 ' + Math.floor(workMin % 60) + ' 分 · 砌了 ' + doneBricks + ' 块砖';
+    updateGoods(earnedToday);
+  }, 250);
 
   renderFish();
   if (!cfg) openSet();
