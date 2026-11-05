@@ -101,9 +101,10 @@
 .brick-prog .pl b { color: #2e3d4d; }
 .brick-bar { height: 12px; background: #eaf1f8; border-radius: 999px; overflow: hidden; }
 .brick-bar i { display: block; height: 100%; width: 0; border-radius: 999px; background: repeating-linear-gradient(45deg, #e8a13c 0 10px, #f4b860 10px 20px); transition: width .6s; }
-.goods-chips { display: flex; gap: 8px; padding: 12px 18px 16px; flex-wrap: wrap; }
+.goods-chips { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; padding: 12px 18px 16px; }
+  @media (max-width: 700px) { .goods-chips { grid-template-columns: repeat(3, 1fr); } }
 .goods-chip { flex: 1; min-width: 84px; text-align: center; padding: 9px 4px; border-radius: 12px; background: #f0f4f9; border: 1.5px solid #dbe6ef; cursor: default; }
-.goods-chip .g-name { font-size: 12px; color: #5e7080; }
+.goods-chip .g-name { font-size: 12px; color: #5e7080; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .goods-chip .g-price { font-size: 11px; color: #9aa8b6; margin-top: 2px; }
 .goods-chip .g-bar { height: 5px; background: #dfe8f0; border-radius: 99px; margin-top: 6px; overflow: hidden; }
 .goods-chip .g-bar i { display: block; height: 100%; width: 0; background: #8a97a5; border-radius: 99px; transition: width .8s; }
@@ -112,10 +113,22 @@
 .goods-chip.done .g-bar i { background: linear-gradient(90deg, #f2c46a, #e8a13c); }
 #gToast { position: fixed; top: 76px; left: 50%; transform: translateX(-50%) translateY(-20px); background: #fff8e2; border: 1.5px solid #f2c46a; color: #8a5a12; font-size: 14px; font-weight: 700; padding: 12px 22px; border-radius: 999px; z-index: 30; opacity: 0; transition: all .5s ease; box-shadow: 0 10px 30px rgba(232,161,60,.3); letter-spacing: 1px; }
 #gToast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* 一屏缩放 */
+#appZoom { transform-origin: top center; }
+.zoomCtl { position: fixed; right: 14px; bottom: 14px; z-index: 40; display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.92); border-radius: 999px; padding: 5px 8px; box-shadow: 0 6px 20px rgba(58,110,168,.25); user-select: none; }
+.zoomCtl button { width: 30px; height: 30px; border: 0; border-radius: 50%; background: #eaf2fa; color: #3a6ea8; font-size: 17px; cursor: pointer; line-height: 1; }
+.zoomCtl button:hover { background: #d8e8f8; }
+.zoomCtl .zPct { font-size: 12px; color: #5e7080; min-width: 42px; text-align: center; font-variant-numeric: tabular-nums; }
+.zoomCtl .zFit { font-size: 11px; color: #3a6ea8; cursor: pointer; padding: 4px 6px; border-radius: 8px; }
+.zoomCtl .zFit:hover { background: #eaf2fa; }
+body.dragging { cursor: grabbing; }
+@media (max-width: 700px) { .zoomCtl { display: none; } }
 </style>
 
 </head>
 <body>
+<div id="appZoom">
 <header>
   <h1>牛马<em>到账计时器</em></h1>
   <p>每一秒上班，都在为下班充值 · 数据仅存本地不上传</p>
@@ -163,6 +176,13 @@
   <button type="button" id="setBtn">⚙ 薪资设置</button>
   <button type="button" id="bossBtn" class="gold">😎 老板来了</button>
   <button type="button" id="shareBtn">📸 生成战绩图</button>
+</div>
+</div>
+<div class="zoomCtl">
+  <button type="button" id="zOut">−</button>
+  <span class="zPct" id="zPct">100%</span>
+  <button type="button" id="zIn">＋</button>
+  <span class="zFit" id="zFitBtn">适配</span>
 </div>
 
 <div id="gToast"></div>
@@ -419,12 +439,18 @@
 
   /* ===== 搬砖工地动画 + 价值兑换 ===== */
   var GOODS = [
-    { name: '大水', price: 2 },
-    { name: '瑞幸', price: 9.9 },
-    { name: '沙县狂欢', price: 18 },
-    { name: '电影票', price: 45 },
-    { name: '游戏机', price: 2000 },
-    { name: 'iPhone duo', price: 9999 }
+    { name: '大水', price: 2, u: '瓶' },
+    { name: '冰阔乐', price: 3, u: '瓶' },
+    { name: '瑞幸', price: 9.9, u: '杯' },
+    { name: '沙县套餐', price: 18, u: '顿' },
+    { name: '螺蛳粉加炸蛋', price: 26, u: '碗' },
+    { name: '精酿啤酒', price: 35, u: '杯' },
+    { name: '电影票', price: 45, u: '张' },
+    { name: '游戏机', price: 2000, u: '台' },
+    { name: '猫全年疫苗体检', price: 2800, u: '次' },
+    { name: 'iPhone duo', price: 9999, u: '台' },
+    { name: '小米SU7', price: 250000, u: '辆' },
+    { name: '移民老美', price: 10000000, u: '趟' }
   ];
   var goodsUnlocked = load('niuma_goods_toast', {});
   var chipsEl = document.getElementById('goodsChips');
@@ -432,6 +458,7 @@
   GOODS.forEach(function (g) {
     var d = document.createElement('div');
     d.className = 'goods-chip';
+    d.title = g.name;
     d.innerHTML = '<div class="g-name">' + g.name + '</div><div class="g-price">¥' + g.price + '</div><div class="g-bar"><i></i></div>';
     chipsEl.appendChild(d);
     goodsEls[g.name] = d;
@@ -443,7 +470,8 @@
       gt.id = 'gToast';
       document.body.appendChild(gt);
     }
-    gt.textContent = '🔨 已搬出一' + (name === '瑞幸' ? '杯' : name === '大水' ? '瓶' : '份') + name + '的钱！¥' + price + ' 达成';
+    var g2 = GOODS.find(function (x) { return x.name === name; });
+    gt.textContent = '🔨 已搬出一' + (g2 && g2.u ? g2.u : '份') + name + '的钱！¥' + price + ' 达成';
     gt.classList.add('show');
     setTimeout(function () { gt.classList.remove('show'); }, 3500);
   }
@@ -610,6 +638,50 @@
 
   renderFish();
   if (!cfg) openSet();
+
+  /* ===== 一屏缩放 + 右下角控件 ===== */
+  var appZoom = document.getElementById('appZoom');
+  var zoomLevel = 0; /* 0=自动适配；>0=手动倍率 */
+  var drag = null;
+  var baseH = 0;
+  function contentH() {
+    if (!baseH) { appZoom.style.height = ''; baseH = appZoom.scrollHeight || appZoom.offsetHeight; }
+    return baseH;
+  }
+  function fitScale() {
+    var vh = window.innerHeight - 30, vw = window.innerWidth - 24;
+    var ch = contentH() + 30, cw = 620;
+    return Math.min(vw / cw, vh / ch, 1.4);
+  }
+  function applyZoom() {
+    if (window.innerWidth < 700) { appZoom.style.transform = ''; appZoom.style.height = ''; document.body.style.padding = ''; return; }
+    var s = zoomLevel > 0 ? zoomLevel : fitScale();
+    appZoom.style.transform = 'scale(' + s.toFixed(3) + ')';
+    appZoom.style.height = (contentH() * s) + 'px';
+    document.body.style.padding = '8px 10px 18px';
+    document.getElementById('zPct').textContent = Math.round(s * 100) + '%';
+  }
+  window.addEventListener('resize', applyZoom);
+  window.addEventListener('load', applyZoom);
+  setTimeout(applyZoom, 100);
+  setTimeout(applyZoom, 600);
+  document.getElementById('zIn').addEventListener('click', function () { zoomLevel = Math.min(2, (zoomLevel > 0 ? zoomLevel : fitScale()) + 0.15); applyZoom(); });
+  document.getElementById('zOut').addEventListener('click', function () { zoomLevel = Math.max(0.4, (zoomLevel > 0 ? zoomLevel : fitScale()) - 0.15); applyZoom(); });
+  document.getElementById('zFitBtn').addEventListener('click', function () { zoomLevel = 0; applyZoom(); document.documentElement.scrollTop = 0; });
+  /* 放大后拖拽平移 */
+  document.addEventListener('mousedown', function (e) {
+    if (e.target.closest('.zoomCtl') || e.target.closest('button') || e.target.closest('input')) return;
+    var s = zoomLevel > 0 ? zoomLevel : fitScale();
+    if (contentH() * s <= window.innerHeight) return;
+    drag = { x: e.clientX, y: e.clientY, sl: document.documentElement.scrollLeft, st: document.documentElement.scrollTop };
+    document.body.classList.add('dragging');
+  });
+  document.addEventListener('mousemove', function (e) {
+    if (!drag) return;
+    document.documentElement.scrollLeft = drag.sl - (e.clientX - drag.x);
+    document.documentElement.scrollTop = drag.st - (e.clientY - drag.y);
+  });
+  document.addEventListener('mouseup', function () { drag = null; document.body.classList.remove('dragging'); });
   setInterval(tick, 200);
   tick();
 })();
