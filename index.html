@@ -93,7 +93,7 @@
   @media (max-width: 480px) { header h1 { font-size: 20px; } .clock { font-size: 18px; } }
 
 /* 搬砖工地 */
-#brickCard { width: min(560px, 94vw); background: #ffffff; border-radius: 18px; overflow: hidden; box-shadow: 0 16px 44px rgba(58,110,168,.14); margin-bottom: 16px; }
+#brickCard { width: 100%; background: #ffffff; border-radius: 18px; overflow: hidden; box-shadow: 0 16px 44px rgba(58,110,168,.14); }
 #brickWrap { position: relative; }
 #brickCv { display: block; width: 100%; }
 .brick-prog { padding: 8px 14px 2px; }
@@ -119,7 +119,11 @@ body { display: grid; grid-template-columns: 1.15fr 1fr; gap: 10px; padding: 12p
 header { grid-area: head; }
 .cardMain { grid-area: main; }
 .cardFish { grid-area: fish; }
-#brickCard { grid-area: brick; }
+#brickCard { grid-area: brick; display: grid; grid-template-columns: 1.05fr 1fr; grid-template-areas: "prog cv" "chips cv"; align-items: start; }
+#brickCard > #brickWrap { grid-area: cv; }
+#brickCard > .brick-prog { grid-area: prog; }
+#brickCard > .goods-chips { grid-area: chips; }
+#brickCard > #brickWrap canvas { height: 100%; }
 .tools { grid-area: tools; }
 header { grid-column: 1 / -1; text-align: left; display: flex; align-items: baseline; gap: 12px; margin-bottom: 0; }
 header h1 { font-size: 21px; }
@@ -129,17 +133,21 @@ body > .card:nth-of-type(1) { grid-column: auto; }
 .cardMain { grid-column: auto; }
 #brickCard { grid-column: 1 / -1; }
 #brickCv { height: 150px; }
-.goods-chips { grid-template-columns: repeat(6, 1fr); padding: 8px 14px 10px; }
+.goods-chips { grid-template-columns: repeat(6, 1fr); padding: 8px 14px 12px; }
 .big { font-size: 42px; }
 .clock { font-size: 18px; }
 .tools { max-width: 1080px; width: 100%; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); }
 /* 小窗极简模式 */
-body.miniMode header, body.miniMode .cardFish, body.miniMode #brickCard, body.miniMode .tools { display: none; }
+body.miniMode header, body.miniMode .cardFish, body.miniMode .tools { display: none; }
+body.miniMode #brickCard { display: block; }
+body.miniMode .goods-chips { display: none; }
+body.miniMode .brick-prog { padding: 6px 4px 0; }
 body.miniMode { padding-top: 18px; }
 .miniExit { display: none; margin: 12px auto 0; width: calc(100% - 8px); padding: 12px; font-size: 14px; border: 0; border-radius: 14px; background: #fff; color: #3a6ea8; box-shadow: 0 6px 18px rgba(58,110,168,.12); cursor: pointer; letter-spacing: 2px; }
 body.miniMode .miniExit { display: block; }
 @media (max-width: 900px) {
   body { grid-template-columns: 1fr; grid-template-areas: "head" "main" "fish" "brick" "tools"; }
+  #brickCard { display: block; }
   header { flex-direction: column; gap: 4px; }
   .tools { grid-template-columns: repeat(2, 1fr); }
   .goods-chips { grid-template-columns: repeat(3, 1fr); }
@@ -522,7 +530,9 @@ body.miniMode .miniExit { display: block; }
   var lastBub = 0;
 
   function drawBrickScene(earned, pct, workMin) {
-    var W = brickCv.clientWidth || 560, H = 150;
+    var W = brickCv.clientWidth || 560;
+    var H = Math.round(brickCv.parentElement.clientHeight) || 150;
+    if (H < 110) H = 110;
     if (brickCv.width !== Math.round(W * (window.devicePixelRatio || 1))) {
       brickCv.width = Math.round(W * (window.devicePixelRatio || 1));
       brickCv.height = Math.round(H * (window.devicePixelRatio || 1));
