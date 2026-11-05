@@ -115,11 +115,11 @@
 #gToast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* 紧凑双列 */
-body { display: grid; grid-template-columns: 1.15fr 1fr; gap: 10px; padding: 12px 16px 10px; max-width: 1080px; margin: 0 auto; justify-items: stretch; align-items: start; grid-template-areas: "head head" "main fish" "brick brick" "tools tools"; }
+body { display: grid; grid-template-columns: 1.15fr 1fr; gap: 10px; padding: 12px 16px 10px; max-width: 1080px; margin: 0 auto; justify-items: stretch; align-items: start; grid-template-areas: "head head" "main fish" "brick brick" "tools tools"; align-items: stretch; }
 header { grid-area: head; }
 .cardMain { grid-area: main; }
 .cardFish { grid-area: fish; }
-#brickCard { grid-area: brick; display: grid; grid-template-columns: 1.05fr 1fr; grid-template-areas: "prog cv" "chips cv"; align-items: start; }
+#brickCard { grid-area: brick; display: grid; grid-template-columns: 1.05fr 1fr; grid-template-areas: "cv prog" "cv chips"; align-items: start; }
 #brickCard > #brickWrap { grid-area: cv; }
 #brickCard > .brick-prog { grid-area: prog; }
 #brickCard > .goods-chips { grid-area: chips; }
