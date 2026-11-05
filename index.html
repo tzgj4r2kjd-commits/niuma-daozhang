@@ -727,26 +727,32 @@ body.miniMode .miniExit { display: block; }
       else {
         var alpha = cAge < 250 ? cAge / 250 : (cAge > cT - 400 ? (cT - cAge) / 400 : 1);
         x.globalAlpha = alpha;
-        x.font = '700 11px sans-serif';
+        var qfs = 22, sfs = 20;
+        x.font = '700 ' + qfs + 'px sans-serif';
         var w1 = x.measureText(chipSay.quip).width;
-        x.font = '10px sans-serif';
+        x.font = sfs + 'px sans-serif';
         var w2 = x.measureText(chipSay.sub).width;
-        var bw2 = Math.max(w1, w2) + 18, bh2 = 36;
+        while (Math.max(w1, w2) + 30 > W - 12 && qfs > 13) {
+          qfs -= 2; sfs -= 2;
+          x.font = '700 ' + qfs + 'px sans-serif'; w1 = x.measureText(chipSay.quip).width;
+          x.font = sfs + 'px sans-serif'; w2 = x.measureText(chipSay.sub).width;
+        }
+        var bw2 = Math.max(w1, w2) + 30, bh2 = qfs + sfs + 22;
         var bx2 = Math.max(6, Math.min(W - bw2 - 6, manX - bw2 / 2));
-        var by2 = Math.max(4, manY - 86);
+        var by2 = Math.max(4, manY - bh2 - 52);
         x.fillStyle = 'rgba(255,255,255,.96)';
         x.strokeStyle = '#f2c46a'; x.lineWidth = 1.5;
         if (x.roundRect) { x.beginPath(); x.roundRect(bx2, by2, bw2, bh2, 9); x.fill(); x.stroke(); }
         else { x.fillRect(bx2, by2, bw2, bh2); x.strokeRect(bx2, by2, bw2, bh2); }
         x.fillStyle = 'rgba(255,255,255,.96)';
-        x.beginPath(); x.moveTo(manX - 5, by2 + bh2); x.lineTo(manX + 5, by2 + bh2); x.lineTo(manX, by2 + bh2 + 7); x.closePath(); x.fill();
+        x.beginPath(); x.moveTo(manX - 9, by2 + bh2); x.lineTo(manX + 9, by2 + bh2); x.lineTo(manX, by2 + bh2 + 10); x.closePath(); x.fill();
         x.strokeStyle = '#f2c46a';
-        x.beginPath(); x.moveTo(manX - 5, by2 + bh2); x.lineTo(manX, by2 + bh2 + 7); x.lineTo(manX + 5, by2 + bh2); x.stroke();
+        x.beginPath(); x.moveTo(manX - 9, by2 + bh2); x.lineTo(manX, by2 + bh2 + 10); x.lineTo(manX + 9, by2 + bh2); x.stroke();
         x.textAlign = 'center';
-        x.fillStyle = '#b07a1e'; x.font = '700 11px sans-serif';
-        x.fillText(chipSay.quip, bx2 + bw2 / 2, by2 + 14);
-        x.fillStyle = '#5e7080'; x.font = '10px sans-serif';
-        x.fillText(chipSay.sub, bx2 + bw2 / 2, by2 + 28);
+        x.fillStyle = '#b07a1e'; x.font = '700 ' + qfs + 'px sans-serif';
+        x.fillText(chipSay.quip, bx2 + bw2 / 2, by2 + qfs + 4);
+        x.fillStyle = '#5e7080'; x.font = sfs + 'px sans-serif';
+        x.fillText(chipSay.sub, bx2 + bw2 / 2, by2 + qfs + sfs + 8);
         x.globalAlpha = 1; x.textAlign = 'left';
       }
     }
