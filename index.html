@@ -103,7 +103,9 @@
 .brick-bar i { display: block; height: 100%; width: 0; border-radius: 999px; background: repeating-linear-gradient(45deg, #e8a13c 0 10px, #f4b860 10px 20px); transition: width .6s; }
 .goods-chips { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; padding: 12px 18px 16px; }
   @media (max-width: 700px) { .goods-chips { grid-template-columns: repeat(3, 1fr); } }
-.goods-chip { min-width: 0; text-align: center; padding: 9px 4px; border-radius: 12px; background: #f0f4f9; border: 1.5px solid #dbe6ef; cursor: default; }
+.goods-chip { min-width: 0; text-align: center; padding: 9px 4px; border-radius: 12px; background: #f0f4f9; border: 1.5px solid #dbe6ef; cursor: pointer; }
+.goods-chip:active { transform: scale(.96); }
+.goods-chip:active .g-name { color: #3a6ea8; }
 .goods-chip .g-name { font-size: 12px; color: #5e7080; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .goods-chip .g-price { font-size: 11px; color: #9aa8b6; margin-top: 2px; }
 .goods-chip .g-bar { height: 5px; background: #dfe8f0; border-radius: 99px; margin-top: 6px; overflow: hidden; }
@@ -498,6 +500,49 @@ body.miniMode .miniExit { display: block; }
     gt.classList.add('show');
     setTimeout(function () { gt.classList.remove('show'); }, 3500);
   }
+  function fmtNeed(sec) {
+    var d = sec / 28800;
+    if (d >= 365) return '还要搬 ' + (d / 365).toFixed(1) + ' 年砖（先忍着）';
+    if (d >= 1) return '还要搬 ' + (d >= 10 ? Math.round(d) : d.toFixed(1)) + ' 天砖';
+    var h = sec / 3600;
+    if (h >= 1) return '还要再干 ' + h.toFixed(1) + ' 小时';
+    return '还要再干 ' + Math.max(1, Math.round(sec / 60)) + ' 分钟';
+  }
+  var lastEarn = 0;
+  var chipSay = null; /* 点击品类：{born,until,quip,sub,face} */
+  var MOODS = [
+    { max: 50, face: 'happy', quips: ['小case，一块砖的事', '马上就能白嫖啦'] },
+    { max: 3000, face: 'grit', quips: ['别催，砖一块块砌', '攒钱速度赶不上想买速度'] },
+    { max: 10000, face: 'grit', quips: ['新机在向我招手', '搬砖使我快乐（并没有）'] },
+    { max: 300000, face: 'sweat', quips: ['这堵墙砌完能提车吗', '老板，能预支工资吗'] },
+    { max: 1e15, face: 'dead', quips: ['搬到猴年马月也凑不齐…', '建议直接投胎'] }
+  ];
+  chipsEl.addEventListener('click', function (ev) {
+    var chip = ev.target.closest('.goods-chip');
+    if (!chip) return;
+    var g = GOODS.find(function (x) { return x.name === chip.title; });
+    if (!g) return;
+    var earned = lastEarn || 0;
+    var pn = performance.now();
+    if (earned >= g.price) {
+      chipSay = { born: pn, until: pn + 5000, face: 'love', quip: '白嫖到了，美滋滋', sub: '今天已白嫖 ' + Math.floor(earned / g.price) + ' ' + (g.u || '份') };
+      return;
+    }
+    var need = Math.max(1, Math.ceil(g.price - earned));
+    var sec = (g.price - earned) / perSec();
+    var now = new Date();
+    var nm = now.getHours() * 60 + now.getMinutes();
+    var leftWork = (endMin() - nm) * 60;
+    var mood = null;
+    for (var mi = 0; mi < MOODS.length; mi++) if (g.price < MOODS[mi].max) { mood = MOODS[mi]; break; }
+    if (!mood) mood = MOODS[MOODS.length - 1];
+    chipSay = {
+      born: pn, until: pn + 5000, face: mood.face,
+      quip: mood.quips[Math.floor(Math.random() * mood.quips.length)],
+      sub: '还差 ¥' + need + ' · ' + fmtNeed(sec) + (sec <= leftWork && leftWork > 0 ? '（下班前能拿下！）' : '')
+    };
+  });
+
   function updateGoods(earned) {
     GOODS.forEach(function (g) {
       var el = goodsEls[g.name];
@@ -619,9 +664,42 @@ body.miniMode .miniExit { display: block; }
     x.fillStyle = '#f2b93c';
     x.beginPath(); x.arc(manX + dir * 1, manY - 33.5, 5.6, 3.14, 0); x.fill();
     x.fillRect(manX + dir * 1 - 6.4, manY - 34.6, 12.8, 2);
-    /* 眼睛 */
-    x.fillStyle = '#2b2b2b';
-    x.beginPath(); x.arc(manX + dir * 2.6, manY - 31.5, .7, 0, 6.29); x.fill();
+    /* 眼睛/表情：点击品类后按档位切换 */
+    var fx = manX + dir * 1, fy = manY - 31.5;
+    var face = chipSay && now < chipSay.until ? chipSay.face : null;
+    x.strokeStyle = '#2b2b2b'; x.fillStyle = '#2b2b2b'; x.lineWidth = 1.1; x.lineCap = 'round';
+    if (face === 'happy') {
+      x.beginPath(); x.arc(fx - 2.2, fy, 1.6, 3.5, 5.9); x.stroke();
+      x.beginPath(); x.arc(fx + 2.2, fy, 1.6, 3.5, 5.9); x.stroke();
+      x.beginPath(); x.arc(fx, fy + 2.2, 1.9, 0.3, 2.8); x.stroke();
+    } else if (face === 'grit') {
+      x.beginPath(); x.moveTo(fx - 3.2, fy - 1.2); x.lineTo(fx - 1.2, fy); x.lineTo(fx - 3.2, fy + 1.2); x.stroke();
+      x.beginPath(); x.moveTo(fx + 3.2, fy - 1.2); x.lineTo(fx + 1.2, fy); x.lineTo(fx + 3.2, fy + 1.2); x.stroke();
+      x.beginPath(); x.moveTo(fx - 1.8, fy + 2.8); x.lineTo(fx + 1.8, fy + 2.8); x.stroke();
+    } else if (face === 'sweat') {
+      x.beginPath(); x.arc(fx - 2.2, fy, 0.8, 0, 6.29); x.fill();
+      x.beginPath(); x.arc(fx + 2.2, fy, 0.8, 0, 6.29); x.fill();
+      x.beginPath(); x.moveTo(fx - 1.8, fy + 2.6); x.quadraticCurveTo(fx - 0.8, fy + 3.6, fx, fy + 2.6); x.quadraticCurveTo(fx + 0.8, fy + 1.8, fx + 1.8, fy + 2.8); x.stroke();
+      x.fillStyle = 'rgba(90,150,210,.9)';
+      x.beginPath(); x.ellipse(fx - 6, fy - 3, 1.8, 2.6, 0, 0, 6.29); x.fill();
+    } else if (face === 'dead') {
+      x.beginPath();
+      x.moveTo(fx - 3.2, fy - 1.2); x.lineTo(fx - 1.2, fy + 1.2); x.moveTo(fx - 1.2, fy - 1.2); x.lineTo(fx - 3.2, fy + 1.2);
+      x.moveTo(fx + 3.2, fy - 1.2); x.lineTo(fx + 1.2, fy + 1.2); x.moveTo(fx + 1.2, fy - 1.2); x.lineTo(fx + 3.2, fy + 1.2);
+      x.stroke();
+      x.beginPath(); x.moveTo(fx - 1.8, fy + 2.8); x.lineTo(fx + 1.8, fy + 2.8); x.stroke();
+    } else if (face === 'love') {
+      x.fillStyle = '#e05656';
+      [fx - 2.3, fx + 2.3].forEach(function (cxx) {
+        x.beginPath(); x.arc(cxx - 0.8, fy, 0.9, 0, 6.29); x.arc(cxx + 0.8, fy, 0.9, 0, 6.29); x.fill();
+        x.beginPath(); x.moveTo(cxx - 1.6, fy + 0.5); x.lineTo(cxx, fy + 2.6); x.lineTo(cxx + 1.6, fy + 0.5); x.closePath(); x.fill();
+      });
+      x.strokeStyle = '#2b2b2b';
+      x.beginPath(); x.arc(fx, fy + 2.4, 1.7, 0.4, 2.7); x.stroke();
+    } else {
+      x.fillStyle = '#2b2b2b';
+      x.beginPath(); x.arc(manX + dir * 2.6, manY - 31.5, .7, 0, 6.29); x.fill();
+    }
     /* 汗滴（搬砖辛苦） */
     x.fillStyle = 'rgba(90,150,210,.8)';
     var sw = (now / 900) % 1;
@@ -642,6 +720,36 @@ body.miniMode .miniExit { display: block; }
       x.globalAlpha = 1;
       if (b.y < manY - 95) bub.splice(bi, 1);
     }
+    /* 话语气泡（点击品类后5秒） */
+    if (chipSay) {
+      var cAge = now - chipSay.born, cT = 5000;
+      if (cAge > cT) chipSay = null;
+      else {
+        var alpha = cAge < 250 ? cAge / 250 : (cAge > cT - 400 ? (cT - cAge) / 400 : 1);
+        x.globalAlpha = alpha;
+        x.font = '700 11px sans-serif';
+        var w1 = x.measureText(chipSay.quip).width;
+        x.font = '10px sans-serif';
+        var w2 = x.measureText(chipSay.sub).width;
+        var bw2 = Math.max(w1, w2) + 18, bh2 = 36;
+        var bx2 = Math.max(6, Math.min(W - bw2 - 6, manX - bw2 / 2));
+        var by2 = Math.max(4, manY - 86);
+        x.fillStyle = 'rgba(255,255,255,.96)';
+        x.strokeStyle = '#f2c46a'; x.lineWidth = 1.5;
+        if (x.roundRect) { x.beginPath(); x.roundRect(bx2, by2, bw2, bh2, 9); x.fill(); x.stroke(); }
+        else { x.fillRect(bx2, by2, bw2, bh2); x.strokeRect(bx2, by2, bw2, bh2); }
+        x.fillStyle = 'rgba(255,255,255,.96)';
+        x.beginPath(); x.moveTo(manX - 5, by2 + bh2); x.lineTo(manX + 5, by2 + bh2); x.lineTo(manX, by2 + bh2 + 7); x.closePath(); x.fill();
+        x.strokeStyle = '#f2c46a';
+        x.beginPath(); x.moveTo(manX - 5, by2 + bh2); x.lineTo(manX, by2 + bh2 + 7); x.lineTo(manX + 5, by2 + bh2); x.stroke();
+        x.textAlign = 'center';
+        x.fillStyle = '#b07a1e'; x.font = '700 11px sans-serif';
+        x.fillText(chipSay.quip, bx2 + bw2 / 2, by2 + 14);
+        x.fillStyle = '#5e7080'; x.font = '10px sans-serif';
+        x.fillText(chipSay.sub, bx2 + bw2 / 2, by2 + 28);
+        x.globalAlpha = 1; x.textAlign = 'left';
+      }
+    }
     x.textAlign = 'left';
   }
 
@@ -658,6 +766,7 @@ body.miniMode .miniExit { display: block; }
     brickBarEl.style.width = Math.min(100, pct).toFixed(1) + '%';
     var doneBricks = Math.floor(pct);
     brickStatEl.textContent = '已搬 ' + Math.floor(workMin / 60) + ' 小时 ' + Math.floor(workMin % 60) + ' 分 · 砌了 ' + doneBricks + ' 块砖';
+    lastEarn = earnedToday;
     updateGoods(earnedToday);
   }, 250);
 
