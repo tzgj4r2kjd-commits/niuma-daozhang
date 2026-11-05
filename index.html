@@ -27,42 +27,42 @@
     overflow: hidden;
     margin-bottom: 16px;
   }
-  .main-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px 0; }
+  .main-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px 0; }
   .badge { font-size: 12px; padding: 4px 12px; border-radius: 999px; color: #fff; background: #3a86d0; letter-spacing: 2px; }
   .badge.fish { background: #4caf7d; }
   .badge.over { background: #e05656; }
   .badge.off { background: #8a97a5; }
   .date { font-size: 12px; color: #8a97a5; }
   .clock { font-size: 22px; color: #5e7080; font-variant-numeric: tabular-nums; text-align: right; padding: 6px 20px 0; }
-  .big-wrap { padding: 10px 20px 4px; }
+  .big-wrap { padding: 8px 18px 4px; }
   .big-label { font-size: 13px; color: #7e93a6; letter-spacing: 2px; }
   .big { font-size: clamp(40px, 9vw, 58px); font-weight: 800; color: #2e3d4d; font-variant-numeric: tabular-nums; letter-spacing: 1px; line-height: 1.15; }
   .big .unit { font-size: 22px; font-weight: 600; color: #7e93a6; margin-right: 4px; }
   .rate { font-size: 13px; color: #3a86d0; padding: 0 20px 14px; }
   .rate b { font-variant-numeric: tabular-nums; }
-  .prog-wrap { padding: 0 20px 18px; }
+  .prog-wrap { padding: 0 18px 14px; }
   .prog-line { display: flex; justify-content: space-between; font-size: 12px; color: #7e93a6; margin-bottom: 6px; }
   .bar { height: 10px; background: #eaf1f8; border-radius: 999px; overflow: hidden; }
   .bar i { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #3a86d0, #6cb0f0); transition: width .5s; }
   body.overtime .bar i { background: linear-gradient(90deg, #e05656, #f08a7a); }
-  .month { display: flex; justify-content: space-between; padding: 12px 20px; border-top: 1px dashed #d3e0ec; font-size: 13px; color: #5e7080; }
+  .month { display: flex; justify-content: space-between; padding: 10px 18px; border-top: 1px dashed #d3e0ec; font-size: 12.5px; color: #5e7080; }
   .month b { color: #2e3d4d; font-variant-numeric: tabular-nums; }
   /* 摸鱼回收器 */
-  .sec-title { font-size: 14px; font-weight: 700; letter-spacing: 2px; padding: 14px 20px 4px; color: #2e3d4d; }
-  .fish-btns { display: flex; gap: 8px; padding: 8px 20px 4px; flex-wrap: wrap; }
+  .sec-title { font-size: 13.5px; font-weight: 700; letter-spacing: 2px; padding: 12px 16px 2px; color: #2e3d4d; }
+  .fish-btns { display: flex; gap: 8px; padding: 6px 16px 4px; flex-wrap: wrap; }
   .fish-btns button {
     flex: 1; min-width: 100px; padding: 10px 6px; font-size: 13px; cursor: pointer;
     border: 1.5px solid #bcd6ee; background: #f4faff; color: #3a6ea8; border-radius: 12px;
   }
   .fish-btns button.on { background: #4caf7d; border-color: #4caf7d; color: #fff; }
-  .fish-list { padding: 8px 20px 16px; font-size: 12.5px; color: #5e7080; line-height: 2; }
+  .fish-list { padding: 6px 16px 10px; font-size: 12px; color: #5e7080; line-height: 1.9; }
   .fish-list b { color: #4caf7d; font-variant-numeric: tabular-nums; }
   /* 语录 */
-  .quote { padding: 4px 20px 16px; font-size: 12.5px; color: #9aa8b6; font-style: italic; }
+  .quote { padding: 2px 16px 12px; font-size: 12px; color: #9aa8b6; font-style: italic; }
   /* 工具行 */
   .tools { width: min(560px, 94vw); display: flex; gap: 10px; flex-wrap: wrap; }
   .tools button {
-    flex: 1; min-width: 120px; padding: 12px; font-size: 13.5px; cursor: pointer;
+    padding: 11px 8px; font-size: 13px; cursor: pointer;
     border: 0; border-radius: 14px; background: #fff; color: #3a6ea8;
     box-shadow: 0 6px 18px rgba(58,110,168,.12); letter-spacing: 1px;
   }
@@ -96,7 +96,7 @@
 #brickCard { width: min(560px, 94vw); background: #ffffff; border-radius: 18px; overflow: hidden; box-shadow: 0 16px 44px rgba(58,110,168,.14); margin-bottom: 16px; }
 #brickWrap { position: relative; }
 #brickCv { display: block; width: 100%; }
-.brick-prog { padding: 10px 18px 4px; }
+.brick-prog { padding: 8px 14px 2px; }
 .brick-prog .pl { display: flex; justify-content: space-between; font-size: 12px; color: #7e93a6; margin-bottom: 5px; }
 .brick-prog .pl b { color: #2e3d4d; }
 .brick-bar { height: 12px; background: #eaf1f8; border-radius: 999px; overflow: hidden; }
@@ -114,27 +114,46 @@
 #gToast { position: fixed; top: 76px; left: 50%; transform: translateX(-50%) translateY(-20px); background: #fff8e2; border: 1.5px solid #f2c46a; color: #8a5a12; font-size: 14px; font-weight: 700; padding: 12px 22px; border-radius: 999px; z-index: 30; opacity: 0; transition: all .5s ease; box-shadow: 0 10px 30px rgba(232,161,60,.3); letter-spacing: 1px; }
 #gToast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* 一屏缩放 */
-#appZoom { transform-origin: top center; }
-.zoomCtl { position: fixed; right: 14px; bottom: 14px; z-index: 40; display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.92); border-radius: 999px; padding: 5px 8px; box-shadow: 0 6px 20px rgba(58,110,168,.25); user-select: none; }
-.zoomCtl button { width: 30px; height: 30px; border: 0; border-radius: 50%; background: #eaf2fa; color: #3a6ea8; font-size: 17px; cursor: pointer; line-height: 1; }
-.zoomCtl button:hover { background: #d8e8f8; }
-.zoomCtl .zPct { font-size: 12px; color: #5e7080; min-width: 42px; text-align: center; font-variant-numeric: tabular-nums; }
-.zoomCtl .zFit { font-size: 11px; color: #3a6ea8; cursor: pointer; padding: 4px 6px; border-radius: 8px; }
-.zoomCtl .zFit:hover { background: #eaf2fa; }
-body.dragging { cursor: grabbing; }
-@media (max-width: 700px) { .zoomCtl { display: none; } }
+/* 紧凑双列 */
+body { display: grid; grid-template-columns: 1.15fr 1fr; gap: 10px; padding: 12px 16px 10px; max-width: 1080px; margin: 0 auto; justify-items: stretch; align-items: start; grid-template-areas: "head head" "main fish" "brick brick" "tools tools"; }
+header { grid-area: head; }
+.cardMain { grid-area: main; }
+.cardFish { grid-area: fish; }
+#brickCard { grid-area: brick; }
+.tools { grid-area: tools; }
+header { grid-column: 1 / -1; text-align: left; display: flex; align-items: baseline; gap: 12px; margin-bottom: 0; }
+header h1 { font-size: 21px; }
+header p { margin-top: 0; }
+body > .card:nth-of-type(1) { grid-column: auto; }
+.card { width: 100%; margin-bottom: 0; }
+.cardMain { grid-column: auto; }
+#brickCard { grid-column: 1 / -1; }
+#brickCv { height: 150px; }
+.goods-chips { grid-template-columns: repeat(6, 1fr); padding: 8px 14px 10px; }
+.big { font-size: 42px; }
+.clock { font-size: 18px; }
+.tools { max-width: 1080px; width: 100%; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); }
+/* 小窗极简模式 */
+body.miniMode header, body.miniMode .cardFish, body.miniMode #brickCard, body.miniMode .tools { display: none; }
+body.miniMode { padding-top: 18px; }
+.miniExit { display: none; margin: 12px auto 0; width: calc(100% - 8px); padding: 12px; font-size: 14px; border: 0; border-radius: 14px; background: #fff; color: #3a6ea8; box-shadow: 0 6px 18px rgba(58,110,168,.12); cursor: pointer; letter-spacing: 2px; }
+body.miniMode .miniExit { display: block; }
+@media (max-width: 900px) {
+  body { grid-template-columns: 1fr; grid-template-areas: "head" "main" "fish" "brick" "tools"; }
+  header { flex-direction: column; gap: 4px; }
+  .tools { grid-template-columns: repeat(2, 1fr); }
+  .goods-chips { grid-template-columns: repeat(3, 1fr); }
+}
 </style>
 
 </head>
 <body>
-<div id="appZoom">
 <header>
   <h1>牛马<em>到账计时器</em></h1>
   <p>每一秒上班，都在为下班充值 · 数据仅存本地不上传</p>
 </header>
 
-<div class="card">
+<div class="card cardMain">
   <div class="main-head">
     <span class="badge" id="stateBadge">上班中</span>
     <span class="date" id="dateTxt"></span>
@@ -161,7 +180,7 @@ body.dragging { cursor: grabbing; }
   </div>
   <div class="goods-chips" id="goodsChips"></div>
 </div>
-<div class="card">
+<div class="card cardFish">
   <div class="sec-title">摸鱼回收器 · 白嫖才是真到账</div>
   <div class="fish-btns">
     <button type="button" data-k="lache">带薪拉屎</button>
@@ -176,14 +195,11 @@ body.dragging { cursor: grabbing; }
   <button type="button" id="setBtn">⚙ 薪资设置</button>
   <button type="button" id="bossBtn" class="gold">😎 老板来了</button>
   <button type="button" id="shareBtn">📸 生成战绩图</button>
+  <button type="button" id="widgetBtn">🪟 小窗模式</button>
 </div>
+<button type="button" class="miniExit" id="miniExitBtn">⛶ 展开完整版</button>
 </div>
-<div class="zoomCtl">
-  <button type="button" id="zOut">−</button>
-  <span class="zPct" id="zPct">100%</span>
-  <button type="button" id="zIn">＋</button>
-  <span class="zFit" id="zFitBtn">适配</span>
-</div>
+
 
 <div id="gToast"></div>
 <div class="mask" id="setMask">
@@ -506,7 +522,7 @@ body.dragging { cursor: grabbing; }
   var lastBub = 0;
 
   function drawBrickScene(earned, pct, workMin) {
-    var W = brickCv.clientWidth || 560, H = 190;
+    var W = brickCv.clientWidth || 560, H = 150;
     if (brickCv.width !== Math.round(W * (window.devicePixelRatio || 1))) {
       brickCv.width = Math.round(W * (window.devicePixelRatio || 1));
       brickCv.height = Math.round(H * (window.devicePixelRatio || 1));
@@ -639,49 +655,28 @@ body.dragging { cursor: grabbing; }
   renderFish();
   if (!cfg) openSet();
 
-  /* ===== 一屏缩放 + 右下角控件 ===== */
-  var appZoom = document.getElementById('appZoom');
-  var zoomLevel = 0; /* 0=自动适配；>0=手动倍率 */
-  var drag = null;
-  var baseH = 0;
-  function contentH() {
-    if (!baseH) { appZoom.style.height = ''; baseH = appZoom.scrollHeight || appZoom.offsetHeight; }
-    return baseH;
-  }
-  function fitScale() {
-    var vh = window.innerHeight - 30, vw = window.innerWidth - 24;
-    var ch = contentH() + 30, cw = 620;
-    return Math.min(vw / cw, vh / ch, 1.4);
-  }
-  function applyZoom() {
-    if (window.innerWidth < 700) { appZoom.style.transform = ''; appZoom.style.height = ''; document.body.style.padding = ''; return; }
-    var s = zoomLevel > 0 ? zoomLevel : fitScale();
-    appZoom.style.transform = 'scale(' + s.toFixed(3) + ')';
-    appZoom.style.height = (contentH() * s) + 'px';
-    document.body.style.padding = '8px 10px 18px';
-    document.getElementById('zPct').textContent = Math.round(s * 100) + '%';
-  }
-  window.addEventListener('resize', applyZoom);
-  window.addEventListener('load', applyZoom);
-  setTimeout(applyZoom, 100);
-  setTimeout(applyZoom, 600);
-  document.getElementById('zIn').addEventListener('click', function () { zoomLevel = Math.min(2, (zoomLevel > 0 ? zoomLevel : fitScale()) + 0.15); applyZoom(); });
-  document.getElementById('zOut').addEventListener('click', function () { zoomLevel = Math.max(0.4, (zoomLevel > 0 ? zoomLevel : fitScale()) - 0.15); applyZoom(); });
-  document.getElementById('zFitBtn').addEventListener('click', function () { zoomLevel = 0; applyZoom(); document.documentElement.scrollTop = 0; });
-  /* 放大后拖拽平移 */
-  document.addEventListener('mousedown', function (e) {
-    if (e.target.closest('.zoomCtl') || e.target.closest('button') || e.target.closest('input')) return;
-    var s = zoomLevel > 0 ? zoomLevel : fitScale();
-    if (contentH() * s <= window.innerHeight) return;
-    drag = { x: e.clientX, y: e.clientY, sl: document.documentElement.scrollLeft, st: document.documentElement.scrollTop };
-    document.body.classList.add('dragging');
+  /* ===== 小窗极简模式 ===== */
+  var isMini = new URLSearchParams(location.search).get('mini') === '1';
+  if (isMini) document.body.classList.add('miniMode');
+  document.getElementById('miniExitBtn').addEventListener('click', function () {
+    location.href = location.pathname;
   });
-  document.addEventListener('mousemove', function (e) {
-    if (!drag) return;
-    document.documentElement.scrollLeft = drag.sl - (e.clientX - drag.x);
-    document.documentElement.scrollTop = drag.st - (e.clientY - drag.y);
+
+  /* ===== 小窗模式：一键缩到右下角挂件 ===== */
+  document.getElementById('widgetBtn').addEventListener('click', function () {
+    var w = 380, h = 640;
+    var left = Math.max(0, (window.screen.availWidth - w - 10));
+    var top = Math.max(0, (window.screen.availHeight - h - 30));
+    var win = window.open(location.pathname + '?mini=1', 'niuma_widget', 'popup=yes,width=' + w + ',height=' + h + ',left=' + left + ',top=' + top);
+    if (win) {
+      try { win.resizeTo(w, h); win.moveTo(left, top); win.focus(); } catch (e) {}
+      this.textContent = '🪟 已在小窗运行';
+      var self = this;
+      setTimeout(function () { self.textContent = '🪟 小窗模式'; }, 3000);
+    } else {
+      alert('浏览器拦截了弹窗，请允许弹窗后重试');
+    }
   });
-  document.addEventListener('mouseup', function () { drag = null; document.body.classList.remove('dragging'); });
   setInterval(tick, 200);
   tick();
 })();
