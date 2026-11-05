@@ -62,7 +62,7 @@
   /* 工具行 */
   .tools { width: min(560px, 94vw); display: flex; gap: 10px; flex-wrap: wrap; }
   .tools button {
-    padding: 11px 8px; font-size: 13px; cursor: pointer;
+    flex: 1; min-width: 140px; padding: 12px; font-size: 13.5px; cursor: pointer;
     border: 0; border-radius: 14px; background: #fff; color: #3a6ea8;
     box-shadow: 0 6px 18px rgba(58,110,168,.12); letter-spacing: 1px;
   }
@@ -103,7 +103,7 @@
 .brick-bar i { display: block; height: 100%; width: 0; border-radius: 999px; background: repeating-linear-gradient(45deg, #e8a13c 0 10px, #f4b860 10px 20px); transition: width .6s; }
 .goods-chips { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; padding: 12px 18px 16px; }
   @media (max-width: 700px) { .goods-chips { grid-template-columns: repeat(3, 1fr); } }
-.goods-chip { flex: 1; min-width: 84px; text-align: center; padding: 9px 4px; border-radius: 12px; background: #f0f4f9; border: 1.5px solid #dbe6ef; cursor: default; }
+.goods-chip { min-width: 0; text-align: center; padding: 9px 4px; border-radius: 12px; background: #f0f4f9; border: 1.5px solid #dbe6ef; cursor: default; }
 .goods-chip .g-name { font-size: 12px; color: #5e7080; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .goods-chip .g-price { font-size: 11px; color: #9aa8b6; margin-top: 2px; }
 .goods-chip .g-bar { height: 5px; background: #dfe8f0; border-radius: 99px; margin-top: 6px; overflow: hidden; }
@@ -119,10 +119,10 @@ body { display: grid; grid-template-columns: 1.15fr 1fr; gap: 10px; padding: 12p
 header { grid-area: head; }
 .cardMain { grid-area: main; }
 .cardFish { grid-area: fish; }
-#brickCard { grid-area: brick; display: grid; grid-template-columns: 1.05fr 1fr; grid-template-areas: "cv prog" "cv chips"; align-items: start; }
+#brickCard { grid-area: brick; display: grid; grid-template-columns: 1.15fr 1fr; grid-template-areas: "cv prog" "cv chips"; align-items: start; column-gap: 14px; }
 #brickCard > #brickWrap { grid-area: cv; }
 #brickCard > .brick-prog { grid-area: prog; }
-#brickCard > .goods-chips { grid-area: chips; }
+#brickCard > .goods-chips { grid-area: chips; min-width: 0; }
 #brickCard > #brickWrap canvas { height: 100%; }
 .tools { grid-area: tools; }
 header { grid-column: 1 / -1; text-align: left; display: flex; align-items: baseline; gap: 12px; margin-bottom: 0; }
@@ -136,7 +136,7 @@ body > .card:nth-of-type(1) { grid-column: auto; }
 .goods-chips { grid-template-columns: repeat(6, 1fr); padding: 8px 14px 12px; }
 .big { font-size: 42px; }
 .clock { font-size: 18px; }
-.tools { max-width: 1080px; width: 100%; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); }
+.tools { max-width: 1080px; width: 100%; margin: 0 auto; display: flex; gap: 14px; flex-wrap: wrap; }
 /* 小窗极简模式 */
 body.miniMode header, body.miniMode .cardFish, body.miniMode .tools { display: none; }
 body.miniMode #brickCard { display: block; }
@@ -149,7 +149,6 @@ body.miniMode .miniExit { display: block; }
   body { grid-template-columns: 1fr; grid-template-areas: "head" "main" "fish" "brick" "tools"; }
   #brickCard { display: block; }
   header { flex-direction: column; gap: 4px; }
-  .tools { grid-template-columns: repeat(2, 1fr); }
   .goods-chips { grid-template-columns: repeat(3, 1fr); }
 }
 </style>
